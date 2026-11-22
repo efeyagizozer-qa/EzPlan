@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="EzPlan" />
+  <meta name="theme-color" content="#000000" />
+  <title>EzPlan • Weekly Focus & Schedule</title>
+  <style>
+    :root {
+      --bg: #000000;
+      --card: #121215;
+      --card-border: #222228;
+      --text: #f5f5f7;
+      --muted: #8e8e93;
+      --accent: #0a84ff;
+      --green: #30d158;
+      --orange: #ff9f0a;
+      --red: #ff453a;
+      --purple: #bf5af2;
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", sans-serif;
+      padding: env(safe-area-inset-top, 16px) 16px calc(env(safe-area-inset-bottom, 20px) + 84px) 16px;
+      min-height: 100vh;
+      line-height: 1.4;
+    }
+
+    .header-card {
+      background: linear-gradient(145deg, #18181d, #0f0f12);
+      border: 1px solid var(--card-border);
+      border-radius: 26px;
+      padding: 18px;
+      margin-top: 8px;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+    }
+
+    .header-info h1 {
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: -0.4px;
+    }
+
+    .header-info p {
+      font-size: 13px;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .pill-btn {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: var(--text);
+      font-size: 12px;
+      font-weight: 600;
+      padding: 6px 12px;
+      border-radius: 999px;
+      cursor: pointer;
+    }
+
+    .pill-btn.primary {
+      background: rgba(10, 132, 255, 0.18);
+      border-color: rgba(10, 132, 255, 0.4);
+      color: #5ac8fa;
+    }
+
+    .ring-wrap {
+      position: relative;
+      width: 66px;
+      height: 66px;
+      flex-shrink: 0;
+    }
+
+    .ring-wrap svg {
+      transform: rotate(-90deg);
+      width: 66px;
+      height: 66px;
+    }
+
+    .ring-bg {
+      fill: none;
+      stroke: #26262c;
+      stroke-width: 6;
+    }
+
+    .ring-fg {
+      fill: none;
+      stroke: var(--green);
+      stroke-width: 6;
+      stroke-linecap: round;
+      transition: stroke-dashoffset 0.35s ease;
+    }
+
+    .ring-text {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding-bottom: 10px;
+      margin-bottom: 10px;
+      scrollbar-width: none;
+    }
+    .tabs::-webkit-scrollbar { display: none; }
+
+    .tab {
+      background: var(--card);
+      border: 1px solid var(--card-border);
+      color: var(--muted);
+      padding: 8px 14px;
+      border-radius: 14px;
+      font-size: 13px;
+      font-weight: 600;
+      white-space: nowrap;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .tab.active {
+      background: var(--text);
+      color: #000000;
+      border-color: var(--text);
+    }
+
+    .task-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .task-card {
+      background: var(--card);
+      border: 1px solid var(--card-border);
+      border-radius: 20px;
+      padding: 14px 16px;
+      display: flex;
+      align-items: flex-start;
+      gap: 13px;
+      cursor: pointer;
+      transition: transform 0.12s ease, opacity 0.2s ease, border-color 0.2s ease;
+    }
+
+    .task-card:active {
+      transform: scale(0.98);
+    }
+
+    .task-card.done {
+      opacity: 0.48;
+      border-color: #19191d;
+    }
+
+    .checkbox {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      border: 2px solid #48484a;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      margin-top: 1px;
+      transition: all 0.2s;
+    }
+
+    .task-card.done .checkbox {
+      background: var(--green);
+      border-color: var(--green);
+    }
+
+    .task-body {
+      flex: 1;
+    }
+
+    .task-meta {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 4px;
+      flex-wrap: wrap;
+    }
+
+    .badge {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+
+    .b-blue { background: rgba(10, 132, 255, 0.18); color: #5ac8fa; }
+    .b-purple { background: rgba(191, 90, 242, 0.18); color: #da8fff; }
+    .b-green { background: rgba(48, 209, 88, 0.18); color: #30d158; }
+    .b-orange { background: rgba(255, 159, 10, 0.2); color: #ffb340; }
+    .b-red { background: rgba(255, 69, 58, 0.2); color: #ff6961; }
+
+    .task-time {
+      font-size: 11px;
+      color: var(--muted);
+      font-weight: 500;
+    }
+
+    .task-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .task-card.done .task-title {
+      text-decoration: line-through;
+      color: var(--muted);
+    }
+
+    .task-sub {
+      font-size: 12.5px;
+      color: var(--muted);
+      margin-top: 3px;
+    }
+
+    .del-btn {
+      background: transparent;
+      border: none;
+      color: #636366;
+      font-size: 16px;
+      padding: 2px 6px;
+      cursor: pointer;
+    }
+
+    .empty-state {
+      text-align: center;
+      color: var(--muted);
+      font-size: 14px;
+      padding: 40px 16px;
+      background: var(--card);
+      border: 1px dashed var(--card-border);
+      border-radius: 20px;
+    }
+
+    .bottom-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: rgba(18, 18, 21, 0.92);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      border-top: 1px solid var(--card-border);
+      padding: 10px 16px calc(env(safe-area-inset-bottom, 12px) + 6px) 16px;
+      display: flex;
+      gap: 8px;
+    }
+
+    .bottom-bar input {
+      flex: 1;
+      background: #1c1c21;
+      border: 1px solid #2c2c34;
+      border-radius: 14px;
+      padding: 10px 14px;
+      color: var(--text);
+      font-size: 14px;
+      outline: none;
+    }
+
+    .bottom-bar button {
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 14px;
+      padding: 0 16px;
+      font-weight: 700;
+      font-size: 14px;
+      cursor: pointer;
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.88);
+      z-index: 100;
+      padding: 24px 16px;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+    }
+
+    .modal.open { display: flex; }
+
+    .modal-box {
+      background: #16161a;
+      border: 1px solid #2c2c34;
+      border-radius: 24px;
+      padding: 20px;
+      max-width: 360px;
+      width: 100%;
+    }
+
+    .modal-box h3 { font-size: 17px; margin-bottom: 6px; }
+    .modal-box p { font-size: 13px; color: var(--muted); margin-bottom: 14px; }
+
+    .preview-img {
+      width: 150px;
+      border-radius: 18px;
+      border: 1px solid #333;
+      margin-bottom: 14px;
+    }
+
+    .modal-btns {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+    }
+
+    .toast {
+      position: fixed;
+      top: 18px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #2c2c34;
+      color: #fff;
+      padding: 8px 16px;
+      border-radius: 999px;
+      font-size: 12.5px;
+      font-weight: 600;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s;
+      z-index: 200;
+    }
+    .toast.show { opacity: 1; }
+  </style>
+</head>
+<body>
+
+  <div id="toast" class="toast">Saved ✓</div>
+
+  <div class="header-card">
+    <div class="header-info">
+      <h1>EzPlan 🎯</h1>
+      <p id="subtitle">0/0 Completed</p>
+      <div class="header-actions">
+        <button class="pill-btn primary" onclick="generateLockWallpaper()">🔒 Lock Widget</button>
+        <button class="pill-btn" onclick="clearCompleted()">Clear Done</button>
+      </div>
+    </div>
+    <div class="ring-wrap">
+      <svg viewBox="0 0 66 66">
+        <circle class="ring-bg" cx="33" cy="33" r="27"></circle>
+        <circle id="ring-fg" class="ring-fg" cx="33" cy="33" r="27" stroke-dasharray="169.65" stroke-dashoffset="169.65"></circle>
+      </svg>
+      <div id="ring-text" class="ring-text">0%</div>
+    </div>
+  </div>
+
+  <div class="tabs" id="tabs">
+    <button class="tab active" data-day="ALL" onclick="setDay('ALL')">All</button>
+    <button class="tab" data-day="Sun" onclick="setDay('Sun')">Sun</button>
+    <button class="tab" data-day="Mon" onclick="setDay('Mon')">Mon</button>
+    <button class="tab" data-day="Tue" onclick="setDay('Tue')">Tue</button>
+    <button class="tab" data-day="Wed" onclick="setDay('Wed')">Wed</button>
+    <button class="tab" data-day="Thu" onclick="setDay('Thu')">Thu</button>
+    <button class="tab" data-day="Fri" onclick="setDay('Fri')">Fri</button>
+    <button class="tab" data-day="Sat" onclick="setDay('Sat')">Sat</button>
+  </div>
+
+  <div class="task-list" id="task-list"></div>
+
+  <div class="bottom-bar">
+    <input type="text" id="new-task-input" placeholder="Add a task for selected day..." onkeydown="if(event.key==='Enter') addTask()" />
+    <button onclick="addTask()">Add</button>
+  </div>
+
+  <div class="modal" id="wp-modal">
+    <div class="modal-box">
+      <h3>iPhone Lock Screen Widget</h3>
+      <p>Your upcoming tasks aligned right beneath the iOS Lock Screen clock.</p>
+      <img id="wp-preview" class="preview-img" alt="Lock Screen Preview" />
+      <div class="modal-btns">
+        <a id="wp-download" class="pill-btn primary" download="ezplan-lockscreen.png" style="text-decoration:none; padding:10px 16px;">Download</a>
+        <button class="pill-btn" onclick="closeModal()" style="padding:10px 16px;">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const STORAGE_KEY = "ezplan_tasks_v1";
+
+    const DEFAULT_TASKS = [
+      { id: 1, day: "Sun", tag: "Sample", tagClass: "b-blue", time: "Today", title: "Tap to complete or add your own tasks below", sub: "All data stays privately on your device", done: false }
+    ];
+
+    let tasks = loadTasks();
+    let currentDay = "ALL";
+
+    function loadTasks() {
+      try {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved) return JSON.parse(saved);
+      } catch (e) {}
+      return JSON.parse(JSON.stringify(DEFAULT_TASKS));
+    }
+
+    function saveTasks() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
+      } catch (e) {}
+      showToast("Saved locally ✓");
+    }
+
+    function showToast(msg) {
+      const t = document.getElementById("toast");
+      t.textContent = msg;
+      t.classList.add("show");
+      clearTimeout(window._toastTimer);
+      window._toastTimer = setTimeout(() => t.classList.remove("show"), 1200);
+    }
+
+    function setDay(day) {
+      currentDay = day;
+      document.querySelectorAll(".tab").forEach(btn => {
+        btn.classList.toggle("active", btn.dataset.day === day);
+      });
+      render();
+    }
+
+    function toggleTask(id) {
+      tasks = tasks.map(t => t.id === id ? { ...t, done: !t.done } : t);
+      saveTasks();
+      render();
+    }
+
+    function deleteTask(e, id) {
+      e.stopPropagation();
+      tasks = tasks.filter(t => t.id !== id);
+      saveTasks();
+      render();
+    }
+
+    function addTask() {
+      const input = document.getElementById("new-task-input");
+      const text = input.value.trim();
+      if (!text) return;
+      const targetDay = currentDay === "ALL" ? "Sun" : currentDay;
+      tasks.push({
+        id: Date.now(),
+        day: targetDay,
+        tag: targetDay,
+        tagClass: "b-blue",
+        time: "Task",
+        title: text,
+        sub: "",
+        done: false
+      });
+      input.value = "";
+      saveTasks();
+      render();
+    }
+
+    function clearCompleted() {
+      tasks = tasks.filter(t => !t.done);
+      saveTasks();
+      render();
+    }
+
+    function render() {
+      const list = document.getElementById("task-list");
+      const filtered = currentDay === "ALL" ? tasks : tasks.filter(t => t.day === currentDay);
+
+      if (filtered.length === 0) {
+        list.innerHTML = `<div class="empty-state">No tasks yet for this view. Add one below!</div>`;
+      } else {
+        list.innerHTML = filtered.map(t => `
+          <div class="task-card ${t.done ? "done" : ""}" onclick="toggleTask(${t.id})">
+            <div class="checkbox">
+              ${t.done ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>' : ''}
+            </div>
+            <div class="task-body">
+              <div class="task-meta">
+                <span class="badge ${t.tagClass}">${t.tag}</span>
+                <span class="task-time">${t.day}</span>
+              </div>
+              <div class="task-title">${t.title}</div>
+              ${t.sub ? `<div class="task-sub">${t.sub}</div>` : ""}
+            </div>
+            <button class="del-btn" onclick="deleteTask(event, ${t.id})" aria-label="Delete">✕</button>
+          </div>
+        `).join("");
+      }
+
+      const doneCount = tasks.filter(t => t.done).length;
+      const pct = tasks.length ? Math.round((doneCount / tasks.length) * 100) : 0;
+      const circumference = 169.65;
+      const offset = circumference - (pct / 100) * circumference;
+      document.getElementById("ring-fg").style.strokeDashoffset = offset;
+      document.getElementById("ring-text").textContent = pct + "%";
+      document.getElementById("subtitle").textContent = `${doneCount}/${tasks.length} Completed`;
+    }
+
+    function generateLockWallpaper() {
+      const canvas = document.createElement("canvas");
+      canvas.width = 1179;
+      canvas.height = 2556;
+      const ctx = canvas.getContext("2d");
+
+      const grad = ctx.createLinearGradient(0, 0, 0, 2556);
+      grad.addColorStop(0, "#050507");
+      grad.addColorStop(0.5, "#0d0f17");
+      grad.addColorStop(1, "#050507");
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, 1179, 2556);
+
+      const cardX = 84, cardY = 860, cardW = 1011, cardH = 860, r = 56;
+      ctx.fillStyle = "rgba(28, 28, 34, 0.85)";
+      ctx.beginPath();
+      ctx.roundRect(cardX, cardY, cardW, cardH, r);
+      ctx.fill();
+      ctx.strokeStyle = "rgba(255, 255, 255, 0.14)";
+      ctx.lineWidth = 3;
+      ctx.stroke();
+
+      ctx.fillStyle = "#f5f5f7";
+      ctx.font = "700 44px -apple-system, sans-serif";
+      ctx.fillText("UPCOMING TASKS 🎯", cardX + 54, cardY + 95);
+
+      const pending = tasks.filter(t => !t.done).slice(0, 6);
+      if (pending.length === 0) {
+        ctx.fillStyle = "#30d158";
+        ctx.font = "600 40px -apple-system, sans-serif";
+        ctx.fillText("All tasks completed! 🎉", cardX + 54, cardY + 200);
+      } else {
+        pending.forEach((t, i) => {
+          const y = cardY + 190 + i * 110;
+          ctx.strokeStyle = "#5ac8fa";
+          ctx.lineWidth = 4;
+          ctx.beginPath();
+          ctx.arc(cardX + 74, y - 14, 18, 0, Math.PI * 2);
+          ctx.stroke();
+
+          ctx.fillStyle = "#ffffff";
+          ctx.font = "600 36px -apple-system, sans-serif";
+          const label = `[${t.day}] ${t.title}`;
+          ctx.fillText(label.length > 38 ? label.slice(0, 38) + "..." : label, cardX + 115, y);
+        });
+      }
+
+      const dataUrl = canvas.toDataURL("image/png");
+      document.getElementById("wp-preview").src = dataUrl;
+      document.getElementById("wp-download").href = dataUrl;
+      document.getElementById("wp-modal").classList.add("open");
+    }
+
+    function closeModal() {
+      document.getElementById("wp-modal").classList.remove("open");
+    }
+
+    render();
+  </script>
+</body>
+</html>
